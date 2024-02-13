@@ -1,93 +1,186 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {ScrollView, StyleSheet, Text, useColorScheme, View} from 'react-native';
-
 import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+  ScrollView,
+  StyleSheet,
+  Text,
+  I18nManager,
+  Platform,
+  StatusBar,
+} from 'react-native';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from 'react-native-screens/native-stack';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+import {ListItem, SettingsSwitch} from './src/shared';
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
+import SimpleNativeStack from './src/screens/SimpleNativeStack';
+import SwipeBackAnimation from './src/screens/SwipeBackAnimation';
+import StackPresentation from './src/screens/StackPresentation';
+import HeaderOptions from './src/screens/HeaderOptions';
+import StatusBarExample from './src/screens/StatusBar';
+import Animations from './src/screens/Animations';
+import BottomTabsAndStack from './src/screens/BottomTabsAndStack';
+import Modals from './src/screens/Modals';
+import Orientation from './src/screens/Orientation';
+import SearchBar from './src/screens/SearchBar';
+import Events from './src/screens/Events';
+import Gestures from './src/screens/Gestures';
+
+import {enableFreeze} from 'react-native-screens';
+
+enableFreeze();
+
+if (Platform.OS === 'android') {
+  StatusBar.setTranslucent(true);
 }
 
-function App(): React.JSX.Element {
-  return (
-    <ScrollView contentInsetAdjustmentBehavior="automatic">
-      <Header />
-      <View>
-        <Section title="Step One">
-          Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-          screen and then come back to see your edits.
-        </Section>
-        <Section title="See Your Changes">
-          <ReloadInstructions />
-        </Section>
-        <Section title="Debug">
-          <DebugInstructions />
-        </Section>
-        <Section title="Learn More">
-          Read the docs to discover what to do next:
-        </Section>
-        <LearnMoreLinks />
-      </View>
-    </ScrollView>
-  );
-}
+const SCREENS: Record<
+  string,
+  {
+    title: string;
+    component: () => JSX.Element;
+    type: 'example' | 'playground';
+  }
+> = {
+  SimpleNativeStack: {
+    title: 'Simple Native Stack',
+    component: SimpleNativeStack,
+    type: 'example',
+  },
+  SwipeBackAnimation: {
+    title: 'Swipe Back Animation',
+    component: SwipeBackAnimation,
+    type: 'example',
+  },
+  StackPresentation: {
+    title: 'Stack Presentation',
+    component: StackPresentation,
+    type: 'example',
+  },
+  BottomTabsAndStack: {
+    title: 'Bottom tabs and native stack',
+    component: BottomTabsAndStack,
+    type: 'example',
+  },
+  Modals: {
+    title: 'Modals',
+    component: Modals,
+    type: 'example',
+  },
+  HeaderOptions: {
+    title: 'Header Options',
+    component: HeaderOptions,
+    type: 'playground',
+  },
+  StatusBar: {
+    title: 'Status bar',
+    component: StatusBarExample,
+    type: 'playground',
+  },
+  Animations: {
+    title: 'Animations',
+    component: Animations,
+    type: 'playground',
+  },
+  Orientation: {
+    title: 'Orientation',
+    component: Orientation,
+    type: 'playground',
+  },
+  SearchBar: {
+    title: 'Search bar',
+    component: SearchBar,
+    type: 'playground',
+  },
+  Events: {
+    title: 'Events',
+    component: Events,
+    type: 'playground',
+  },
+  Gestures: {
+    title: 'Gestures',
+    component: Gestures,
+    type: 'playground',
+  },
+};
+
+type RootStackParamList = {
+  Main: undefined;
+} & {
+  [P in keyof typeof SCREENS]: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const MainScreen = ({navigation}): JSX.Element => (
+  <ScrollView testID="root-screen-examples-scrollview">
+    <SettingsSwitch
+      style={styles.switch}
+      label="Right to left"
+      value={I18nManager.isRTL}
+      onValueChange={() => {
+        I18nManager.forceRTL(!I18nManager.isRTL);
+      }}
+    />
+    <Text style={styles.label} testID="root-screen-examples-header">
+      Examples
+    </Text>
+    {Object.keys(SCREENS)
+      .filter(name => SCREENS[name].type === 'example')
+      .map(name => (
+        <ListItem
+          key={name}
+          testID={`root-screen-example-${name}`}
+          title={SCREENS[name].title}
+          onPress={() => navigation.navigate(name)}
+        />
+      ))}
+    <Text style={styles.label}>Playgrounds</Text>
+    {Object.keys(SCREENS)
+      .filter(name => SCREENS[name].type === 'playground')
+      .map(name => (
+        <ListItem
+          key={name}
+          testID={`root-screen-playground-${name}`}
+          title={SCREENS[name].title}
+          onPress={() => navigation.navigate(name)}
+        />
+      ))}
+  </ScrollView>
+);
+
+const ExampleApp = (): JSX.Element => (
+  <NavigationContainer>
+    <Stack.Navigator
+      screenOptions={{
+        direction: I18nManager.isRTL ? 'rtl' : 'ltr',
+      }}>
+      <Stack.Screen
+        name="Main"
+        options={{title: '📱 React Native Screens Examples'}}
+        component={MainScreen}
+      />
+      {Object.keys(SCREENS).map(name => (
+        <Stack.Screen
+          key={name}
+          name={name}
+          getComponent={() => SCREENS[name].component}
+          options={{headerShown: false}}
+        />
+      ))}
+    </Stack.Navigator>
+  </NavigationContainer>
+);
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  label: {
+    fontSize: 15,
+    color: 'black',
+    margin: 10,
+    marginTop: 15,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
+  switch: {
+    marginTop: 15,
   },
 });
 
-export default App;
+export default ExampleApp;
